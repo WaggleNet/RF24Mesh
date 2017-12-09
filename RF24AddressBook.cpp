@@ -18,20 +18,21 @@ int AddressBook::alloc(nodeid_t nodeID, address_t address) {
     list[top].lastRenew = millis();
     top ++;
     list = (MeshAddress*)realloc(list, (top+1)*sizeof(MeshAddress));
+    return 1;
 }
 
 address_t AddressBook::lookup_addr(nodeid_t nodeID) {
     for (uint8_t i=0; i < top; i++)
         if (list[i].nodeID == nodeID)
             return list[i].address;
-    return -1;
+    return 0;
 }
 
 nodeid_t AddressBook::lookup_id(address_t address) {
     for (uint8_t i=0; i < top; i++)
         if (list[i].address == address)
             return list[i].nodeID;
-    return -1;
+    return 0;
 }
 
 int AddressBook::renew(nodeid_t nodeID) {
@@ -58,13 +59,15 @@ int AddressBook::release(address_t address) {
 
 // WARNING: Time consuming operation. Only call once in a while.
 int AddressBook::prune() {
-    uint8_t counter = 0;
+    int counter = 0;
     for (uint8_t i=0; i<top; i++) {
         if ((long)(millis()-list[i].lastRenew) >= MESH_ADDRESS_EXPIRY) {
             release(list[i].address);
+            counter ++;
             i--; // Because it's now deleted, i represents new member
         }
     }
+    return counter;
 }
 
 void AddressBook::loadFromFile() {

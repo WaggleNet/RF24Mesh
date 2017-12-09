@@ -1,14 +1,20 @@
 #pragma once
+#include "Arduino.h"
 
 /*** User Configuration ***/
 #define MESH_MAX_CHILDREN 4 /** Set 1 to 4 (Default: 4) Restricts the maximum children per node. **/
 //#define MESH_NOMASTER /** This can be set to 0 for all nodes except the master (nodeID 0) to save pgm space **/
+
+typedef uint32_t nodeid_t;
+typedef uint16_t address_t;
 
 /***Advanced User Config***/
 #define MESH_LOOKUP_TIMEOUT 3000  /** How long mesh write will retry address lookups before giving up. This is not used when sending to or from the master node. **/
 #define MESH_WRITE_TIMEOUT 5550 /** UNUSED - How long mesh.write will retry failed payloads. */
 #define MESH_DEFAULT_CHANNEL 97  /** Radio channel to operate on 1-127. This is normally modified by calling mesh.setChannel() */
 #define MESH_RENEWAL_TIMEOUT 60000 /** How long to attempt address renewal */
+#define MESH_ADDRESS_EXPIRY 172800L /** How long in millis of silence before a node is deregistered */
+
 /**************************/
 /***       Debug        ***/
 //#define MESH_DEBUG_MINIMAL /** Uncomment for the Master Node to print out address assignments as they are assigned */

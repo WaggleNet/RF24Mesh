@@ -1,13 +1,12 @@
 #pragma once
 #include "Arduino.h"
-#include "RF24Mesh.h"
 #include "RF24Mesh_config.h"
 
-typedef struct MeshAddress {
+struct MeshAddress {
     nodeid_t nodeID;
     address_t address;
     uint32_t lastRenew;
-}
+};
 
 class AddressBook {
 public:
@@ -17,7 +16,7 @@ public:
     int alloc(nodeid_t nodeID, address_t address);
     // Perform a lookup
     address_t lookup_addr(nodeid_t nodeID);
-    nodeid_t lookup_id(address_t address)
+    nodeid_t lookup_id(address_t address);
     // Renews a node, when it's communicated. Auto called when alloc.
     int renew(nodeid_t nodeID);
     // Releases an address
@@ -30,4 +29,4 @@ private:
     void add(nodeid_t nodeID, address_t address);
     MeshAddress *list;
     uint16_t top;
-}
+};
