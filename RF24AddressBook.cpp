@@ -85,9 +85,8 @@ void AddressBook::loadFromFile() {
     	list = (MeshAddress*) realloc(list,length + sizeof(MeshAddress));
 
     	top = length/sizeof(MeshAddress);
-    	for(int i=0; i<top; i++){
+    	for(int i=0; i<top; i++) {
     		infile.read( (char*)&list[i],sizeof(MeshAddress));
-
     	}
     	infile.close();
     #endif
