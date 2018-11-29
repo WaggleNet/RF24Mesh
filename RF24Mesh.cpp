@@ -425,7 +425,8 @@ void RF24Mesh::DHCP() {
     memcpy(&header, network.frame_buffer, sizeof(header));
 
     // Get the unique id of the requester
-    auto buffer_pos = *(nodeid_t *)&network.frame_buffer[sizeof(header)]);
+    auto buffer_pos = *(nodeid_t *)&network.frame_buffer[sizeof(header)];
+    nodeid_t from_id = *(nodeid_t*)buffer_pos;
 
     #if defined (MESH_DEBUG_PRINTF)
         printf("[DHCP] Request from ID %d\n", from_id);
