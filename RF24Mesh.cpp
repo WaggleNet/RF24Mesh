@@ -10,7 +10,8 @@ RF24Mesh::RF24Mesh( RF24& _radio,RF24Network& _network ): radio(_radio),network(
 
 bool RF24Mesh::begin(uint8_t channel, rf24_datarate_e data_rate, uint32_t timeout) {
     // delay(1); // Found problems w/SPIDEV & ncurses. Without this, getch() returns a stream of garbage
-    radio.begin();
+    bool result = 1;
+    result &= radio.begin();
     radio_channel = channel;
     radio.setChannel(radio_channel);
     radio.setDataRate(data_rate);
@@ -28,7 +29,7 @@ bool RF24Mesh::begin(uint8_t channel, rf24_datarate_e data_rate, uint32_t timeou
         mesh_address = 0;
         network.begin(mesh_address);
     }
-    return 1;
+    return result;
 }
 
 /*****************************************************/
@@ -425,7 +426,8 @@ void RF24Mesh::DHCP() {
     memcpy(&header, network.frame_buffer, sizeof(header));
 
     // Get the unique id of the requester
-    auto buffer_pos = *(nodeid_t *)&network.frame_buffer[sizeof(header)]);
+    uint8_t* buffer_pos = &(network.frame_buffer[sizeof(header)]);
+    nodeid_t from_id = *(nodeid_t*)buffer_pos;
 
     #if defined (MESH_DEBUG_PRINTF)
         printf("[DHCP] Request from ID %d\n", from_id);
