@@ -219,7 +219,7 @@ public:
   nodeid_t _nodeID;
 
   typedef struct {
-	address_t Address;
+	address_t address;
 	nodeid_t nodeID;
   } addrListStruct;
 

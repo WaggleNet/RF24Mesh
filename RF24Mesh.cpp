@@ -318,12 +318,12 @@ bool RF24Mesh::requestAddress(uint8_t level) {
 
     addrListStruct addrResponse;
     memcpy(&addrResponse, network.frame_buffer + sizeof(RF24NetworkHeader), sizeof(addrResponse));
-    auto &newAddress = addrResponse.Address;
+    auto &newAddress = addrResponse.address;
     #ifdef MESH_DEBUG_SERIAL
         Serial.println();
         Serial.print(millis());
         Serial.print(" MSH: Received Address Response, addr=");
-        Serial.print(addrResponse.Address, OCT);
+        Serial.print(addrResponse.address, OCT);
         Serial.print(", nodeID=");
         Serial.println(addrResponse.nodeID);
     #endif
@@ -470,7 +470,7 @@ void RF24Mesh::DHCP() {
             header.type = NETWORK_ADDR_RESPONSE;
             header.to_node = header.from_node;
             addrListStruct addrResponse;
-            addrResponse.Address = newAddress;
+            addrResponse.address = newAddress;
             addrResponse.nodeID = from_id;
             // This is a routed request to 00
             #ifdef MESH_DEBUG_PRINTF
