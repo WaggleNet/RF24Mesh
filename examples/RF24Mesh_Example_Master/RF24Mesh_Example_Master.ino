@@ -21,7 +21,7 @@
 #include <EEPROM.h>
 
 /***** Configure the chosen CE,CS pins *****/
-RF24 radio(7,8);
+RF24 radio(9, 10);
 RF24Network network(radio);
 RF24Mesh mesh(radio,network);
 
