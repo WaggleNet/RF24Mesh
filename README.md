@@ -39,6 +39,12 @@ Choose the port, open up the serial monitor and set the baudrate to 115200 as sp
 
 If the connections are established, the master side should display received values and the node side should display `Send OK!` and the value sent. 
 
+## Quick setup with PlatformIO
+
+
+
+
+
 ## Troubleshooting
 
 Outlined below are some common errors we have run into. Possible solutions to the problems are also provided for your reference. You can also document the problems you have encountered and your solutions here. 
