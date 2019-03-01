@@ -198,7 +198,7 @@ bool RF24Mesh::releaseAddress() {
 
 uint16_t RF24Mesh::renewAddress(uint32_t timeout) {
     if (radio.available()) return 0;
-    uint8_t reqCounter = 0;
+    uint8_t pollLevelCounter = 0; // 
     uint8_t totalReqs = 0;
     radio.stopListening();
 
@@ -209,10 +209,10 @@ uint16_t RF24Mesh::renewAddress(uint32_t timeout) {
     mesh_address = MESH_DEFAULT_ADDRESS;
 
     uint32_t start = millis();
-    while (!requestAddress(reqCounter)) {
+    while (!requestAddress(pollLevelCounter)) {
         if (millis()-start > timeout) return 0;
-        delay(50 + ( (totalReqs+1)*(reqCounter+1)) * 2);
-        (++reqCounter) = reqCounter%4;
+        delay(50 + ( (totalReqs+1)*(pollLevelCounter+1)) * 2);
+        (++pollLevelCounter) = pollLevelCounter%4;          // 0,1,2,3
         (++totalReqs) = totalReqs%10;
     }
     network.networkFlags &= ~2;
@@ -304,6 +304,7 @@ bool RF24Mesh::requestAddress(uint8_t level) {
         timr = millis();
 
         while (millis() - timr < 225)
+            // if gets response, break polling loop (break two loops)
             if ((type = network.update()) == NETWORK_ADDR_RESPONSE) {
                 i = pollCount;
                 break;
@@ -462,13 +463,14 @@ void RF24Mesh::DHCP() {
             Serial.print("[DHCP] Trying new address ");
             Serial.println(newAddress, OCT);
         #endif
+        // sanity check to not accidentally allocate another master
         if (!newAddress) continue;
 
         nodeid_t current_user = addrBook.lookup_id(newAddress);
 
-        bool found = (newAddress == MESH_DEFAULT_ADDRESS) || (current_user != from_id && current_user > 0);
+        bool addressOccupied = (newAddress == MESH_DEFAULT_ADDRESS) || (current_user != from_id && current_user > 0);
 
-        if (!found) {
+        if (!addressOccupied) {
             header.type = NETWORK_ADDR_RESPONSE;
             header.to_node = header.from_node;
             addrListStruct addrResponse;
