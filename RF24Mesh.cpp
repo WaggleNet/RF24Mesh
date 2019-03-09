@@ -63,14 +63,13 @@ uint8_t RF24Mesh::update() {
                 uint16_t *fromAddr = (uint16_t*) network.frame_buffer;
                 addrBook.release(*fromAddr);
             }
-            #if !defined (ARDUINO_ARCH_AVR)
-                else if (type == MESH_ADDR_CONFIRM) {
-                    RF24NetworkHeader& header = *(RF24NetworkHeader*)network.frame_buffer;
-                    if (header.from_node == lastAddress) {
-                        setAddress(lastID,lastAddress);
-                    }
+            // if received a packet from a previously time out node, allocate
+            else if (type == MESH_ADDR_CONFIRM) {
+                RF24NetworkHeader& header = *(RF24NetworkHeader*)network.frame_buffer;
+                if (header.from_node == lastAddress) {
+                    setAddress(lastID,lastAddress);
                 }
-            #endif
+            }
         }
     #endif
     return type;
