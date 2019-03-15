@@ -119,3 +119,15 @@ void AddressBook::saveToFile() {
     	infile.close();*/
     #endif
 }
+
+int AddressBook::count() {
+    return top;
+}
+
+MeshAddress& AddressBook::operator[](int index) {
+    if (index >= top) {
+        // Handle overflow case
+        return list[0];
+    }
+    return list[index];
+}

@@ -25,6 +25,8 @@ public:
     int prune();
     void saveToFile();
     void loadFromFile();
+    MeshAddress& operator[] (int index);
+    int count();
 private:
     void add(nodeid_t nodeID, address_t address);
     MeshAddress *list;
