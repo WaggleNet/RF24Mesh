@@ -16,6 +16,7 @@ bool RF24Mesh::begin(uint8_t channel, rf24_datarate_e data_rate, uint32_t timeou
     radio.setChannel(radio_channel);
     radio.setDataRate(data_rate);
     network.returnSysMsgs = 1;
+    lastPruneTime = millis();
 
     if (getNodeID()) { // Not master node
         mesh_address = MESH_DEFAULT_ADDRESS;
@@ -36,8 +37,12 @@ bool RF24Mesh::begin(uint8_t channel, rf24_datarate_e data_rate, uint32_t timeou
 
 uint8_t RF24Mesh::update() {
     uint8_t type = network.update();
+    // Prune unused addresses
+    if ((long)(millis() - lastPruneTime) > MESH_ADDRESS_EXPIRY) {
+        addrBook.prune();
+        lastPruneTime = millis();
+    }
     if (mesh_address == MESH_DEFAULT_ADDRESS) return type;
-
     #if !defined (RF24_TINY) && !defined(MESH_NOMASTER)
         if (type == NETWORK_REQ_ADDRESS) doDHCP = 1;
 
