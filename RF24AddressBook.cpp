@@ -66,7 +66,7 @@ int AddressBook::prune() {
             counter ++;
         }
     }
-    newlist = (MeshAddress*) malloc((counter + 1) * sizeof(MeshAddress));
+    auto newlist = (MeshAddress*) malloc((counter + 1) * sizeof(MeshAddress));
     counter = 0;
     for (uint8_t i=0; i<top; i++) {
         if ((long)(millis()-list[i].lastRenew) < MESH_ADDRESS_EXPIRY) {
