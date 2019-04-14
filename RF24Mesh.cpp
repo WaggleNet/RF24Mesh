@@ -38,6 +38,18 @@ uint8_t RF24Mesh::update() {
     uint8_t type = network.update();
     if (mesh_address == MESH_DEFAULT_ADDRESS) return type;
 
+    // used to calculate when to send another hearbeat package
+    // int32_t to handle overflow cases
+    static int32_t program_time = 0;
+    static int32_t previous_hb = 0;
+    program_time = (int32_t)millis();
+    if (program_time - previous_hb >= MESH_HEATBEAT_T)
+    {
+        previous_hb = program_time;
+        sendHeartbeat();
+    }
+    
+
     #if !defined (RF24_TINY) && !defined(MESH_NOMASTER)
         if (type == NETWORK_REQ_ADDRESS) doDHCP = 1;
 
@@ -518,6 +530,28 @@ void RF24Mesh::DHCP() {
             break;
         } else dprint("[DHCP] Not allocated: Not found\n");
     }
+}
+
+
+bool RF24Mesh::sendHeartbeat()
+{
+    // perform a write to master to update the lastrenew
+    uint32_t data = 0;
+    // 66 is the msg type for heartbeat
+    // use ptr to the data to suppress NULL argument warning
+    // size of the payload is 0
+    bool ret = write(&data, 66, 0);
+    #if defined (MESH_DEBUG_SERIAL)
+        if (ret)
+        {
+            Serial.print("Heartbeat send success\n");
+        }
+        else
+        {
+            Serial.print("Heartbeat send failed\n");
+        }
+    #endif
+    return ret;
 }
 
 #endif //!defined (RF24_TINY) && !defined(MESH_NOMASTER)

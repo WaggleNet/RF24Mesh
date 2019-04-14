@@ -216,6 +216,8 @@ public:
   void saveDHCP();
   void loadDHCP();
 
+  bool sendHeartbeat();
+
   nodeid_t _nodeID;
 
   typedef struct {

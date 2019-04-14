@@ -14,6 +14,7 @@ typedef uint16_t address_t;
 #define MESH_DEFAULT_CHANNEL 97  /** Radio channel to operate on 1-127. This is normally modified by calling mesh.setChannel() */
 #define MESH_RENEWAL_TIMEOUT 60000 /** How long to attempt address renewal */
 #define MESH_ADDRESS_EXPIRY 172800L /** How long in millis of silence before a node is deregistered */
+#define MESH_HEATBEAT_T (MESH_ADDRESS_EXPIRY / 2)
 
 /**************************/
 /***       Debug        ***/
