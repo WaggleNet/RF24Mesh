@@ -451,6 +451,19 @@ void RF24Mesh::DHCP() {
     #endif
 
     if (!from_id) return;
+    
+    // look up in the white list
+    if (!whitelist.find(from_id)) 
+    {
+        #if defined (MESH_DEBUG_PRINTF)
+            printf("[DHCP] Node id: %u not in whitelist", from_id);
+        #elif defined (MESH_DEBUG_SERIAL)
+            Serial.print("[DHCP] Node id: ");
+            Serial.print(from_id, DEC)
+            Serial.println(" not in whitelist")
+        #endif
+        return;
+    }
 
     uint16_t fwd_by = 0;
     uint8_t shiftVal = 0;
