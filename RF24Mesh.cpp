@@ -16,6 +16,7 @@ bool RF24Mesh::begin(uint8_t channel, rf24_datarate_e data_rate, uint32_t timeou
     radio.setChannel(radio_channel);
     radio.setDataRate(data_rate);
     network.returnSysMsgs = 1;
+    lastPruneTime = millis();
 
     if (getNodeID()) { // Not master node
         mesh_address = MESH_DEFAULT_ADDRESS;
@@ -36,8 +37,12 @@ bool RF24Mesh::begin(uint8_t channel, rf24_datarate_e data_rate, uint32_t timeou
 
 uint8_t RF24Mesh::update() {
     uint8_t type = network.update();
+    // Prune unused addresses
+    if ((long)(millis() - lastPruneTime) > MESH_ADDRESS_EXPIRY) {
+        addrBook.prune();
+        lastPruneTime = millis();
+    }
     if (mesh_address == MESH_DEFAULT_ADDRESS) return type;
-
     #if !defined (RF24_TINY) && !defined(MESH_NOMASTER)
         if (type == NETWORK_REQ_ADDRESS) doDHCP = 1;
 
@@ -63,14 +68,13 @@ uint8_t RF24Mesh::update() {
                 uint16_t *fromAddr = (uint16_t*) network.frame_buffer;
                 addrBook.release(*fromAddr);
             }
-            #if !defined (ARDUINO_ARCH_AVR)
-                else if (type == MESH_ADDR_CONFIRM) {
-                    RF24NetworkHeader& header = *(RF24NetworkHeader*)network.frame_buffer;
-                    if (header.from_node == lastAddress) {
-                        setAddress(lastID,lastAddress);
-                    }
+            // if received a packet from a previously time out node, allocate
+            else if (type == MESH_ADDR_CONFIRM) {
+                RF24NetworkHeader& header = *(RF24NetworkHeader*)network.frame_buffer;
+                if (header.from_node == lastAddress) {
+                    setAddress(lastID,lastAddress);
                 }
-            #endif
+            }
         }
     #endif
     return type;
@@ -198,7 +202,7 @@ bool RF24Mesh::releaseAddress() {
 
 uint16_t RF24Mesh::renewAddress(uint32_t timeout) {
     if (radio.available()) return 0;
-    uint8_t reqCounter = 0;
+    uint8_t pollLevelCounter = 0; // 
     uint8_t totalReqs = 0;
     radio.stopListening();
 
@@ -209,10 +213,10 @@ uint16_t RF24Mesh::renewAddress(uint32_t timeout) {
     mesh_address = MESH_DEFAULT_ADDRESS;
 
     uint32_t start = millis();
-    while (!requestAddress(reqCounter)) {
+    while (!requestAddress(pollLevelCounter)) {
         if (millis()-start > timeout) return 0;
-        delay(50 + ( (totalReqs+1)*(reqCounter+1)) * 2);
-        (++reqCounter) = reqCounter%4;
+        delay(50 + ( (totalReqs+1)*(pollLevelCounter+1)) * 2);
+        (++pollLevelCounter) = pollLevelCounter%4;          // 0,1,2,3
         (++totalReqs) = totalReqs%10;
     }
     network.networkFlags &= ~2;
@@ -304,6 +308,7 @@ bool RF24Mesh::requestAddress(uint8_t level) {
         timr = millis();
 
         while (millis() - timr < 225)
+            // if gets response, break polling loop (break two loops)
             if ((type = network.update()) == NETWORK_ADDR_RESPONSE) {
                 i = pollCount;
                 break;
@@ -427,7 +432,9 @@ void RF24Mesh::DHCP() {
 
     // Get the unique id of the requester
     uint8_t* buffer_pos = &(network.frame_buffer[sizeof(header)]);
-    nodeid_t from_id = *(nodeid_t*)buffer_pos;
+    // nodeid_t from_id = *(nodeid_t*)buffer_pos;
+    nodeid_t from_id;
+    memcpy(&from_id, buffer_pos, sizeof(from_id));
 
     #if defined (MESH_DEBUG_PRINTF)
         printf("[DHCP] Request from ID %d\n", from_id);
@@ -460,13 +467,14 @@ void RF24Mesh::DHCP() {
             Serial.print("[DHCP] Trying new address ");
             Serial.println(newAddress, OCT);
         #endif
+        // sanity check to not accidentally allocate another master
         if (!newAddress) continue;
 
         nodeid_t current_user = addrBook.lookup_id(newAddress);
 
-        bool found = (newAddress == MESH_DEFAULT_ADDRESS) || (current_user != from_id && current_user > 0);
+        bool addressOccupied = (newAddress == MESH_DEFAULT_ADDRESS) || (current_user != from_id && current_user > 0);
 
-        if (!found) {
+        if (!addressOccupied) {
             header.type = NETWORK_ADDR_RESPONSE;
             header.to_node = header.from_node;
             addrListStruct addrResponse;

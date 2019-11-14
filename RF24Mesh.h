@@ -220,6 +220,7 @@ public:
 
   typedef struct {
 	address_t address;
+  uint16_t padding;  // NASTY HACK: Fixes alignment issue on 32-bit targets
 	nodeid_t nodeID;
   } addrListStruct;
 
@@ -253,5 +254,5 @@ public:
   uint32_t lastFileSave;
   uint8_t radio_channel;
   uint16_t lastID,lastAddress;
-
+  uint32_t lastPruneTime;
  };

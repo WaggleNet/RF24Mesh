@@ -60,13 +60,22 @@ int AddressBook::release(address_t address) {
 // WARNING: Time consuming operation. Only call once in a while.
 int AddressBook::prune() {
     int counter = 0;
-    for (uint8_t i=0; i<top; i++) {
-        if ((long)(millis()-list[i].lastRenew) >= MESH_ADDRESS_EXPIRY) {
-            release(list[i].address);
+    // Pass 1: Count number of nodes STAYING in the list
+    for (uint8_t i = 0; i < top; i++) {
+        if ((long)(millis()-list[i].lastRenew) < MESH_ADDRESS_EXPIRY) {
             counter ++;
-            i--; // Because it's now deleted, i represents new member
         }
     }
+    auto newlist = (MeshAddress*) malloc((counter + 1) * sizeof(MeshAddress));
+    counter = 0;
+    for (uint8_t i=0; i<top; i++) {
+        if ((long)(millis()-list[i].lastRenew) < MESH_ADDRESS_EXPIRY) {
+            newlist[counter] = list[i]; 
+            counter ++;
+        }
+    }
+    free(list);
+    list = newlist;
     return counter;
 }
 
@@ -118,4 +127,16 @@ void AddressBook::saveToFile() {
     	//}
     	infile.close();*/
     #endif
+}
+
+int AddressBook::count() {
+    return top;
+}
+
+MeshAddress& AddressBook::operator[](int index) {
+    if (index >= top) {
+        // Handle overflow case
+        return list[0];
+    }
+    return list[index];
 }
