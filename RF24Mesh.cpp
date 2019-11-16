@@ -307,10 +307,20 @@ bool RF24Mesh::requestAddress(uint8_t level) {
 
         timr = millis();
 
-        while (millis() - timr < 225)
+        while (millis() - timr < MESH_ADDR_REQ_RES_TIMEOUT)
+            // NOTE: Timeout is in the 1s range to allow slower response time.
+            //       Investigate the implications.
             // if gets response, break polling loop (break two loops)
             if ((type = network.update()) == NETWORK_ADDR_RESPONSE) {
                 i = pollCount;
+                #ifdef MESH_DEBUG_SERIAL
+                    Serial.print(millis());
+                    Serial.print(F(" MSH: Recv response after "));
+                    Serial.print(millis() - timr);
+                    Serial.println(F(" ms"));
+                #elif defined MESH_DEBUG_PRINTF
+                    printf("%u MSH: Got response by %d ms", millis(), timr);
+                #endif
                 break;
             }
         delay(5);
@@ -362,7 +372,7 @@ bool RF24Mesh::requestAddress(uint8_t level) {
     header.type = MESH_ADDR_CONFIRM;
 
     while (!network.write(header,0,0)) {
-        if (registerAddrCount++ >= 6) {
+        if (registerAddrCount++ >= MESH_ADDR_CONFIRM_REPEAT_THRESH) {
             #ifdef MESH_DEBUG_SERIAL
                 Serial.print(millis());
                 Serial.println(F(" MSH: Address confirm not sent"));
@@ -375,6 +385,16 @@ bool RF24Mesh::requestAddress(uint8_t level) {
         }
         delay(3);
     }
+    
+    #ifdef MESH_DEBUG_SERIAL
+        Serial.print(millis());
+        Serial.print(F(" MSH: Obtained address after "));
+        Serial.print(registerAddrCount, DEC);
+        Serial.println(F(" tries"));
+    #elif defined (MESH_DEBUG_PRINTF)
+        printf("Obtained address after %d tries\n", registerAddrCount);
+    #endif
+    
     return 1;
 }
 
@@ -445,7 +465,7 @@ void RF24Mesh::DHCP() {
     #if defined (MESH_DEBUG_PRINTF)
         printf("[DHCP] Request from ID %d\n", from_id);
     #elif defined (MESH_DEBUG_SERIAL)
-        Serial.print("[DHCP] Request from ID ");
+        Serial.print(F("[DHCP] Request from ID "));
         Serial.println(from_id);
     #endif
 
@@ -511,8 +531,7 @@ void RF24Mesh::DHCP() {
             lastAddress = newAddress;
             lastID = from_id;
             while (network.update() != MESH_ADDR_CONFIRM)
-                // FIXME: Nasty hack
-                if (millis() - timer > 2 * network.routeTimeout) {
+                if (millis() - timer > network.routeTimeout) {
                     dprint("[DHCP] Not allocated: Found but timeout\n");
                     return;
                 }
