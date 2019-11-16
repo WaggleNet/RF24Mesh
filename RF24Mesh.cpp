@@ -327,9 +327,9 @@ bool RF24Mesh::requestAddress(uint8_t level) {
     #ifdef MESH_DEBUG_SERIAL
         Serial.println();
         Serial.print(millis());
-        Serial.print(" MSH: Received Address Response, addr=");
+        Serial.print(F(" MSH: Received Address Response, addr="));
         Serial.print(addrResponse.address, OCT);
-        Serial.print(", nodeID=");
+        Serial.print(F(", nodeID="));
         Serial.println(addrResponse.nodeID);
     #endif
 
@@ -338,7 +338,7 @@ bool RF24Mesh::requestAddress(uint8_t level) {
             Serial.print(millis());
             Serial.print(F(" MSH: Attempt Failed "));
             Serial.print(addrResponse.nodeID);
-            Serial.print(", My NodeID ");
+            Serial.print(F(", My NodeID "));
             Serial.println(getNodeID());
         #elif defined MESH_DEBUG_PRINTF
             printf("%u Response discarded, wrong node 0%o from node 0%o sending node 0%o id %d\n",millis(),newAddress,header.from_node,MESH_DEFAULT_ADDRESS,addrResponse.nodeID);
@@ -363,6 +363,12 @@ bool RF24Mesh::requestAddress(uint8_t level) {
 
     while (!network.write(header,0,0)) {
         if (registerAddrCount++ >= 6) {
+            #ifdef MESH_DEBUG_SERIAL
+                Serial.print(millis());
+                Serial.println(F(" MSH: Address confirm not sent"));
+            #elif defined (MESH_DEBUG_PRINTF)
+                printf("Address confirm not sent\n");
+            #endif
             network.begin(MESH_DEFAULT_ADDRESS);
             mesh_address = MESH_DEFAULT_ADDRESS;
             return 0;
@@ -505,7 +511,8 @@ void RF24Mesh::DHCP() {
             lastAddress = newAddress;
             lastID = from_id;
             while (network.update() != MESH_ADDR_CONFIRM)
-                if (millis() - timer > network.routeTimeout) {
+                // FIXME: Nasty hack
+                if (millis() - timer > 2 * network.routeTimeout) {
                     dprint("[DHCP] Not allocated: Found but timeout\n");
                     return;
                 }
