@@ -46,7 +46,9 @@ uint8_t RF24Mesh::update() {
     #if !defined (RF24_TINY) && !defined(MESH_NOMASTER)
         if (type == NETWORK_REQ_ADDRESS) doDHCP = 1;
 
-        if (!getNodeID()) {
+        auto nodeid = getNodeID();
+        addrBook.renew(nodeid);
+        if (!nodeid) {
             if (type == MESH_ADDR_LOOKUP || type == MESH_ID_LOOKUP) {
                 // Lookup request
                 RF24NetworkHeader header;

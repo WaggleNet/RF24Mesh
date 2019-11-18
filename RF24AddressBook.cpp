@@ -1,7 +1,7 @@
 #include "RF24AddressBook.h"
 
 void AddressBook::begin() {
-    list = (MeshAddress *) malloc(2*sizeof(MeshAddress));
+    list = (MeshAddress *) malloc(sizeof(MeshAddress));
     top = 0;
 }
 
@@ -67,8 +67,12 @@ int AddressBook::prune() {
         }
     }
     auto newlist = (MeshAddress*) malloc((counter + 1) * sizeof(MeshAddress));
+    if (top == counter) return counter;
+    top = counter;
+    // Serial.print(F("Pruning addressbook to "));
+    // Serial.println(top);
     counter = 0;
-    for (uint8_t i=0; i<top; i++) {
+    for (uint8_t i = 0; i < top; i++) {
         if ((long)(millis()-list[i].lastRenew) < MESH_ADDRESS_EXPIRY) {
             newlist[counter] = list[i]; 
             counter ++;
