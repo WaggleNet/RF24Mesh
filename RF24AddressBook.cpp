@@ -60,10 +60,19 @@ int AddressBook::release(address_t address) {
 // WARNING: Time consuming operation. Only call once in a while.
 int AddressBook::prune() {
     int counter = 0;
+    uint32_t time_ms = millis();
     // Pass 1: Count number of nodes STAYING in the list
+    // It should not have expired and should not have registered AFTER current time
     for (uint8_t i = 0; i < top; i++) {
-        if ((long)(millis()-list[i].lastRenew) < MESH_ADDRESS_EXPIRY) {
+        if ((long)(time_ms - list[i].lastRenew) < MESH_ADDRESS_EXPIRY && list[i].lastRenew < time_ms) {
             counter ++;
+        } else {
+            #if defined (MESH_DEBUG_PRINTF)
+            printf("[DHCP] Pruning address 0x%x\n", list[i].nodeID);
+            #elif defined (MESH_DEBUG_SERIAL)
+                Serial.print(F("[DHCP] Pruning address 0x"));
+                    Serial.println(list[i].nodeID, HEX);
+            #endif
         }
     }
     auto newlist = (MeshAddress*) malloc((counter + 1) * sizeof(MeshAddress));
@@ -73,8 +82,8 @@ int AddressBook::prune() {
     // Serial.println(top);
     counter = 0;
     for (uint8_t i = 0; i < top; i++) {
-        if ((long)(millis()-list[i].lastRenew) < MESH_ADDRESS_EXPIRY) {
-            newlist[counter] = list[i]; 
+        if ((long)(time_ms - list[i].lastRenew) < MESH_ADDRESS_EXPIRY && list[i].lastRenew < time_ms) {
+            newlist[counter] = list[i];
             counter ++;
         }
     }

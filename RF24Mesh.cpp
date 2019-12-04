@@ -465,10 +465,10 @@ void RF24Mesh::DHCP() {
     memcpy(&from_id, buffer_pos, sizeof(from_id));
 
     #if defined (MESH_DEBUG_PRINTF)
-        printf("[DHCP] Request from ID %d\n", from_id);
+        printf("[DHCP] Request from ID 0x%x\n", from_id);
     #elif defined (MESH_DEBUG_SERIAL)
-        Serial.print(F("[DHCP] Request from ID "));
-        Serial.println(from_id);
+        Serial.print(F("[DHCP] Request from ID 0x"));
+        Serial.println(from_id, HEX);
     #endif
 
     if (!from_id) return;
@@ -514,8 +514,8 @@ void RF24Mesh::DHCP() {
             #elif defined MESH_DEBUG_SERIAL
                 Serial.print("[DHCP] Awarding Address ");
                 Serial.print(newAddress, OCT);
-                Serial.print(" to #");
-                Serial.println(from_id);
+                Serial.print(" to #0x");
+                Serial.println(from_id, HEX);
             #endif
             if (header.from_node != MESH_DEFAULT_ADDRESS) { // Is NOT node 01 to 05
                 delay(2);
