@@ -75,9 +75,8 @@ int AddressBook::prune() {
             #endif
         }
     }
-    auto newlist = (MeshAddress*) malloc((counter + 1) * sizeof(MeshAddress));
     if (top == counter) return counter;
-    top = counter;
+    auto newlist = (MeshAddress*) malloc((counter + 1) * sizeof(MeshAddress));
     // Serial.print(F("Pruning addressbook to "));
     // Serial.println(top);
     counter = 0;
@@ -87,6 +86,7 @@ int AddressBook::prune() {
             counter ++;
         }
     }
+    top = counter;
     free(list);
     list = newlist;
     return counter;
